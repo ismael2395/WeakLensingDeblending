@@ -160,11 +160,12 @@ class Writer(object):
     Raises:
         RuntimeError: Unable to initialize FITS output file.
     """
-    def __init__(self,survey,output_name,no_stamps,no_catalog,output_no_clobber):
+    def __init__(self,survey,output_name,no_stamps,no_catalog,output_no_clobber, no_analysis):
         self.survey = survey
         self.output_name = output_name
         self.no_stamps = no_stamps
         self.no_catalog = no_catalog
+        self.no_analysis = no_analysis
         self.output_no_clobber = output_no_clobber
         self.fits = None
         if self.output_name:
@@ -210,11 +211,16 @@ class Writer(object):
         # Write the simulated survey image into the primary HDU.
         hdu = self.fits[0]
         hdu.data = results.survey.image.array
-        # Copy our Survey ctor args into the primary HDU header.
-        hdu.header['NSLICES'] = results.num_slices
-        hdu.header['PSF_SIGM'] = self.survey.psf_sigma_m
-        hdu.header['PSF_SIGP'] = self.survey.psf_sigma_p
-        hdu.header['PSF_HSM'] = self.survey.psf_size_hsm
+
+        if not self.no_analysis:
+            # Copy our Survey ctor args into the primary HDU header.
+            hdu.header['NSLICES'] = results.num_slices
+            hdu.header['PSF_SIGM'] = self.survey.psf_sigma_m
+            hdu.header['PSF_SIGP'] = self.survey.psf_sigma_p
+            hdu.header['PSF_HSM'] = self.survey.psf_size_hsm
+        else: 
+            hdu.header['NSLICES'], hdu.header['PSF_SIGM'], hdu.header['PSF_SIGP'], hdu.header['PSF_HSM'] = -1, -1, -1, -1 #unspecified. 
+
         for key,value in iteritems(results.survey.args):
             # Fits keyword headers are truncated at length 8. We use the last 8 chararacters
             # to ensure that they are unique.
