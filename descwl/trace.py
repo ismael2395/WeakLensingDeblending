@@ -34,7 +34,7 @@ class Memory(object):
         """
         if not self.enabled:
             return
-        usage = self.this_process.get_memory_info()[0]
+        usage = self.this_process.memory_info()[0]
         print('%s memory usage: %.3f Mb (%+d bytes)' % (label,
             usage/float(2**20),usage-self.last_usage))
         self.last_usage = usage

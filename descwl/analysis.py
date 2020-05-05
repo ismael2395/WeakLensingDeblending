@@ -1063,9 +1063,11 @@ class OverlapAnalyzer(object):
                     raise RuntimeError('Missing required partial derivative images for Fisher matrix analysis.')
 
                 (fisher,covariance,variance,correlation), cond_num_grp = results.get_matrices(group_indices, get_cond_num=True, equilibrate=self.equilibrate)
+                trace("Obtained grp fisher matrices")
 
                 if self.calculate_bias:
                     bias = results.get_bias(group_indices, covariance.copy())
+                    trace("Calculated grp bias")
 
             for index,galaxy in enumerate(group_indices):
                 flux = data['flux'][galaxy]
@@ -1082,6 +1084,7 @@ class OverlapAnalyzer(object):
 
                 # Run the HSM analysis on this galaxy's stamp (ignoring overlaps).
                 if not self.no_hsm:
+                    trace("Finished hsm")
                     try:
                         if self.add_noise:
                             hsm_results = galsim.hsm.EstimateShear(sigaux,self.survey.psf_image)
@@ -1103,6 +1106,7 @@ class OverlapAnalyzer(object):
                                 data['hsm_sigm'][galaxy] = hsm_results.moments_sigma*self.survey.pixel_scale
                         except RuntimeError as e:
                             print(str(e))
+                    trace("Finished hsm")
 
                 # Calculate the SNR this galaxy would have without any overlaps and
                 # assuming that we are in the sky-dominated limit.
@@ -1147,6 +1151,7 @@ class OverlapAnalyzer(object):
                     else:
                         # Redo the Fisher matrix analysis but ignoring overlapping sources.
                         (iso_fisher,iso_covariance,iso_variance,iso_correlation), cond_num  = results.get_matrices([galaxy], get_cond_num=True, equilibrate=self.equilibrate)
+                        trace("Obtained iso fisher matrices")
 
                         # snr_iso and snr_isof will be zero if the Fisher matrix is not invertible or
                         # yields any negative variances. Errors on s,g1,g2 will be np.inf.
@@ -1165,6 +1170,8 @@ class OverlapAnalyzer(object):
                             data['bias_g2'][galaxy] = iso_bias[dg2_index]
                             data['bias_x'][galaxy] = iso_bias[dx_index]
                             data['bias_y'][galaxy] = iso_bias[dy_index]
+                            trace("Calculated iso bias")
+
 
             # Order group members by decreasing isolated S/N (if available), otherwise use snr_sky.
             #this assumes that snr_sky is close to snr_iso (although not necessarily the same.)
@@ -1179,6 +1186,7 @@ class OverlapAnalyzer(object):
             data['grp_id'][grp_members] = group_leader
 
             if not self.no_fisher and not self.no_lmfit:
+                trace("Starting lmfit analysis")
                 alpha = self.alpha
                 data['g1_fit'][sorted_indices] = 0.
                 data['g2_fit'][sorted_indices] = 0.
@@ -1236,6 +1244,7 @@ class OverlapAnalyzer(object):
                                 data['g2_fit'][g1] = 0
                             except RuntimeError as e:
                                 print(str(e))
+                trace("Finished lmfit analysis.")
 
         trace('OverlapAnalyzer.finalize end')
         return results
