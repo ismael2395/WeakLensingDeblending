@@ -5,11 +5,12 @@ contents and formatting.
 """
 from __future__ import print_function, division
 
-import math
 import inspect
+import math
 import os.path
 
 import astropy.table
+
 
 class Reader(object):
     """Read source parameters from a catalog to simulate an image.
@@ -33,7 +34,8 @@ class Reader(object):
     Raises:
         RuntimeError: Missing required catalog_name arg.
     """
-    def __init__(self,catalog_name,ra_center = 0.0,dec_center = 0.0,only_id = [],skip_id = []):
+
+    def __init__(self, catalog_name, ra_center=0.0, dec_center=0.0, only_id=[], skip_id=[]):
         if not catalog_name:
             raise RuntimeError('Missing required catalog_name arg.')
         self.catalog_name = catalog_name
@@ -41,13 +43,13 @@ class Reader(object):
         self.dec_center = dec_center
         self.only_id = only_id
         self.skip_id = skip_id
-        name,ext = os.path.splitext(catalog_name)
+        name, ext = os.path.splitext(catalog_name)
         if ext == '.fits':
-            self.table = astropy.table.Table.read(catalog_name, format = 'fits')
+            self.table = astropy.table.Table.read(catalog_name, format='fits')
         else:
             self.table = astropy.table.Table.read(catalog_name, format='ascii.basic')
 
-    def potentially_visible_entries(self,survey,render_options):
+    def potentially_visible_entries(self, survey, render_options):
         """Iterate over potentially visible catalog entries.
 
         Potential visibility is determined by the combined survey parameters and rendering
@@ -74,13 +76,13 @@ class Reader(object):
         # Calculate the margin size in arcsecs.
         margin_size = 0. if render_options.no_margin else render_options.truncate_radius
         # Calculate the RA,DEC limits of visible entries in degrees.
-        arcsec2deg = 1./3600.
+        arcsec2deg = 1. / 3600.
         # Calculate scaling between RA and vertical angular separations in the image.
         ra_scale = math.cos(math.radians(self.dec_center))
-        ra_size = (0.5*survey.image_width*survey.pixel_scale + margin_size)*arcsec2deg/ra_scale
+        ra_size = (0.5 * survey.image_width * survey.pixel_scale + margin_size) * arcsec2deg / ra_scale
         ra_min = self.ra_center - ra_size
         ra_max = self.ra_center + ra_size
-        dec_size = (0.5*survey.image_height*survey.pixel_scale + margin_size)*arcsec2deg
+        dec_size = (0.5 * survey.image_height * survey.pixel_scale + margin_size) * arcsec2deg
         dec_min = self.dec_center - dec_size
         dec_max = self.dec_center + dec_size
         # Iterate over all catalog entries.
@@ -89,15 +91,15 @@ class Reader(object):
                 continue
             if self.skip_id and entry['galtileid'] in self.skip_id:
                 continue
-            ra,dec = entry['ra'],entry['dec']
+            ra, dec = entry['ra'], entry['dec']
             if ra > 180:
                 ra -= 360.
             if ra < ra_min or ra > ra_max or dec < dec_min or dec > dec_max:
                 continue
             # If we get this far, the entry is visible.
-            dx_arcsecs = (ra - self.ra_center)/arcsec2deg*ra_scale
-            dy_arcsecs = (dec - self.dec_center)/arcsec2deg
-            yield entry,dx_arcsecs,dy_arcsecs
+            dx_arcsecs = (ra - self.ra_center) / arcsec2deg * ra_scale
+            dy_arcsecs = (dec - self.dec_center) / arcsec2deg
+            yield entry, dx_arcsecs, dy_arcsecs
 
     @staticmethod
     def add_args(parser):
@@ -111,19 +113,20 @@ class Reader(object):
             parser(argparse.ArgumentParser): Arguments will be added to this parser object using its
                 add_argument method.
         """
-        parser.add_argument('--catalog-name', type = str, default = None, metavar = 'NAME',
-            help = 'Name of catalog file, which must exist and be readable.')
-        parser.add_argument('--ra-center', type = float, default = 0.0, metavar = 'RA',
-            help = 'Right ascension of image center in degrees.')
-        parser.add_argument('--dec-center', type = float, default = 0.0, metavar = 'DEC',
-            help = 'Declination of image center in degrees.')
-        parser.add_argument('--only-id', type = int, action = 'append', metavar = 'ID',
-            help = 'Use row with ID from the input catalog. May be repeated. All other rows will be ignored.')
-        parser.add_argument('--skip-id', type = int, action = 'append', metavar = 'ID',
-            help = 'Skip row with ID from the input catalog. May be repeated.')
+        parser.add_argument('--catalog-name', type=str, default=None, metavar='NAME',
+                            help='Name of catalog file, which must exist and be readable.')
+        parser.add_argument('--ra-center', type=float, default=0.0, metavar='RA',
+                            help='Right ascension of image center in degrees.')
+        parser.add_argument('--dec-center', type=float, default=0.0, metavar='DEC',
+                            help='Declination of image center in degrees.')
+        parser.add_argument('--only-id', type=int, action='append', metavar='ID',
+                            help='Use row with ID from the input catalog. May be repeated. '
+                                 'All other rows will be ignored.')
+        parser.add_argument('--skip-id', type=int, action='append', metavar='ID',
+                            help='Skip row with ID from the input catalog. May be repeated.')
 
     @classmethod
-    def from_args(cls,args):
+    def from_args(cls, args):
         """Create a new :class:`Reader` object from a set of arguments.
 
         Args:
@@ -139,8 +142,9 @@ class Reader(object):
         # Get a dictionary of the arguments provided.
         args_dict = vars(args)
         # Filter the dictionary to only include constructor parameters.
-        filtered_dict = { key:args_dict[key] for key in (set(pnames) & set(args_dict)) }
+        filtered_dict = {key: args_dict[key] for key in (set(pnames) & set(args_dict))}
         return cls(**filtered_dict)
+
 
 class ReaderStar(object):
     """Read source parameters from a catalog to simulate an image.
@@ -164,21 +168,21 @@ class ReaderStar(object):
     Raises:
         RuntimeError: Missing required catalog_name arg.
     """
-    def __init__(self,star_catalog_name,ra_center = 0.0,dec_center = 0.0,only_star_id = [],skip_id = []):
 
+    def __init__(self, star_catalog_name, ra_center=0.0, dec_center=0.0, only_star_id=[], skip_id=[]):
 
         self.star_catalog_name = star_catalog_name
         self.ra_center = ra_center
         self.dec_center = dec_center
         self.only_star_id = only_star_id
         self.skip_id = skip_id
-        name,ext = os.path.splitext(star_catalog_name)
+        name, ext = os.path.splitext(star_catalog_name)
         if ext == '.fits':
-            self.table = astropy.table.Table.read(star_catalog_name, format = 'fits')
+            self.table = astropy.table.Table.read(star_catalog_name, format='fits')
         else:
             self.table = astropy.table.Table.read(star_catalog_name, format='ascii.basic')
 
-    def potentially_visible_entries(self,survey,render_options):
+    def potentially_visible_entries(self, survey, render_options):
         """Iterate over potentially visible catalog entries.
 
         Potential visibility is determined by the combined survey parameters and rendering
@@ -205,13 +209,13 @@ class ReaderStar(object):
         # Calculate the margin size in arcsecs.
         margin_size = 0. if render_options.no_margin else render_options.truncate_radius
         # Calculate the RA,DEC limits of visible entries in degrees.
-        arcsec2deg = 1./3600.
+        arcsec2deg = 1. / 3600.
         # Calculate scaling between RA and vertical angular separations in the image.
         ra_scale = math.cos(math.radians(self.dec_center))
-        ra_size = (0.5*survey.image_width*survey.pixel_scale + margin_size)*arcsec2deg/ra_scale
+        ra_size = (0.5 * survey.image_width * survey.pixel_scale + margin_size) * arcsec2deg / ra_scale
         ra_min = self.ra_center - ra_size
         ra_max = self.ra_center + ra_size
-        dec_size = (0.5*survey.image_height*survey.pixel_scale + margin_size)*arcsec2deg
+        dec_size = (0.5 * survey.image_height * survey.pixel_scale + margin_size) * arcsec2deg
         dec_min = self.dec_center - dec_size
         dec_max = self.dec_center + dec_size
         # Iterate over all catalog entries.
@@ -220,15 +224,15 @@ class ReaderStar(object):
                 continue
             if self.skip_id and entry['startileid'] in self.skip_id:
                 continue
-            ra,dec = entry['ra'],entry['dec']
+            ra, dec = entry['ra'], entry['dec']
             if ra > 180:
                 ra -= 360.
             if ra < ra_min or ra > ra_max or dec < dec_min or dec > dec_max:
                 continue
             # If we get this far, the entry is visible.
-            dx_arcsecs = (ra - self.ra_center)/arcsec2deg*ra_scale
-            dy_arcsecs = (dec - self.dec_center)/arcsec2deg
-            yield entry,dx_arcsecs,dy_arcsecs
+            dx_arcsecs = (ra - self.ra_center) / arcsec2deg * ra_scale
+            dy_arcsecs = (dec - self.dec_center) / arcsec2deg
+            yield entry, dx_arcsecs, dy_arcsecs
 
     @staticmethod
     def add_args(parser):
@@ -242,13 +246,14 @@ class ReaderStar(object):
             parser(argparse.ArgumentParser): Arguments will be added to this parser object using its
                 add_argument method.
         """
-        parser.add_argument('--star-catalog-name', type = str, default = None, metavar = 'NAME',
-            help = 'Name of star catalog file')
-        parser.add_argument('--only-star-id', type = int, action = 'append', metavar = 'ID',
-            help = 'Use row with ID from the input catalog. May be repeated. All other rows will be ignored.')
+        parser.add_argument('--star-catalog-name', type=str, default=None, metavar='NAME',
+                            help='Name of star catalog file')
+        parser.add_argument('--only-star-id', type=int, action='append', metavar='ID',
+                            help='Use row with ID from the input catalog. May be repeated. All other rows will be '
+                                 'ignored.')
 
     @classmethod
-    def from_args(cls,args):
+    def from_args(cls, args):
         """Create a new :class:`Reader` object from a set of arguments.
 
         Args:
@@ -264,5 +269,5 @@ class ReaderStar(object):
         # Get a dictionary of the arguments provided.
         args_dict = vars(args)
         # Filter the dictionary to only include constructor parameters.
-        filtered_dict = { key:args_dict[key] for key in (set(pnames) & set(args_dict)) }
+        filtered_dict = {key: args_dict[key] for key in (set(pnames) & set(args_dict))}
         return cls(**filtered_dict)
